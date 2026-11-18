@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "frontend-admin/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "web-player/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/admin/(.*)",
+      "dest": "/frontend-admin/$1"
+    },
+    {
+      "src": "/player/(.*)",
+      "dest": "/web-player/$1"
+    }
+  ]
+}

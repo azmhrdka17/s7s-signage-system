@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Client {
+  id                String          @id
+  description       String
+  activeTemplateId  String?
+  activeChannelId   Int?
+  signageContent    SignageContent?
+  queueSlots        QueueSlot[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model MediaResource {
+  id        String   @id @default(uuid())
+  filename  String
+  url       String
+  type      String   // "VIDEO" | "IMAGE"
+  duration  Int?     // dalam detik untuk video
+  createdAt DateTime @default(now())
+}
+
+model TvChannel {
+  id        Int      @id @default(autoincrement())
+  code      Int      @unique
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model SignageContent {
+  id            String   @id @default(uuid())
+  clientId      String   @unique
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  videoUrls     String   // JSON array
+  slideUrls     String   // JSON array
+  runningText   String   @default("")
+  scheduleTable String   @default("[]") // JSON array berisi {poli, dokter, jam}
+  backgroundUrl String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model QueueSlot {
+  id            Int      @id @default(autoincrement())
+  clientId      String
+  client        Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  slotNumber    Int      // 1-5
+  loketName     String
+  currentNumber String   @default("")
+  updatedAt     DateTime @updatedAt
+
+  @@unique([clientId, slotNumber])
+}

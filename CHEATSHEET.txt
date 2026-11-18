@@ -1,0 +1,154 @@
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                        ║
+║         S7S DIGITAL SIGNAGE - QUICK START CHEATSHEET                  ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════
+  🚀 CARA TERCEPAT - START SISTEM
+═══════════════════════════════════════════════════════════════════════════
+
+  1. Double-click: start-all.bat
+  2. Tunggu 15 detik
+  3. Buka browser: localhost:3000/admin & localhost:3002
+  
+  ✅ DONE!
+
+═══════════════════════════════════════════════════════════════════════════
+  📝 CARA MANUAL - 3 TERMINAL
+═══════════════════════════════════════════════════════════════════════════
+
+  Terminal 1 (Backend):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ cd c:\s7s-signage-system\backend                                   │
+  │ npm run start:dev                                                  │
+  └────────────────────────────────────────────────────────────────────┘
+  
+  Terminal 2 (Admin):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ cd c:\s7s-signage-system\frontend-admin                            │
+  │ npm run dev                                                        │
+  └────────────────────────────────────────────────────────────────────┘
+  
+  Terminal 3 (Player):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ cd c:\s7s-signage-system\web-player                                │
+  │ npm run dev                                                        │
+  └────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+  🌐 URL AKSES
+═══════════════════════════════════════════════════════════════════════════
+
+  Admin CMS        : http://localhost:3000/admin
+  Operator Antrian : http://localhost:3000/operator
+  Web Player (TV)  : http://localhost:3002  (tekan F11 fullscreen)
+  Backend API      : http://localhost:3001
+
+═══════════════════════════════════════════════════════════════════════════
+  ⚠️  TROUBLESHOOTING CEPAT
+═══════════════════════════════════════════════════════════════════════════
+
+  Problem                          Solution
+  ───────────────────────────────────────────────────────────────────────
+  Port already in use              Restart komputer
+  Player stuck "Loading..."        Start Backend dulu
+  Gambar tidak muncul              Upload dulu di Admin → Publish
+  Backend error                    cd backend && npm install
+  Database error                   npx prisma migrate reset
+
+═══════════════════════════════════════════════════════════════════════════
+  🛑 CARA STOP SISTEM
+═══════════════════════════════════════════════════════════════════════════
+
+  • Close semua terminal window
+  • Atau tekan Ctrl+C di setiap terminal
+
+═══════════════════════════════════════════════════════════════════════════
+  ✅ CHECKLIST STARTUP
+═══════════════════════════════════════════════════════════════════════════
+
+  □ Backend running (tunggu sampai muncul: 🚀 Backend server running)
+  □ Admin running (tunggu sampai: ✓ Ready in)
+  □ Player running (tunggu sampai: ➜ Local:)
+  □ Browser buka localhost:3000/admin
+  □ Browser buka localhost:3002 (untuk TV)
+
+═══════════════════════════════════════════════════════════════════════════
+  📋 WORKFLOW HARIAN
+═══════════════════════════════════════════════════════════════════════════
+
+  PAGI (Buka Sistem):
+  ├─ Double-click: start-all.bat
+  ├─ Tunggu 15 detik
+  └─ Buka browser → localhost:3000/admin & localhost:3002
+
+  SIANG (Pakai):
+  ├─ Upload konten di Admin CMS
+  ├─ Panggil antrian di Operator
+  └─ Monitor Player di TV
+
+  SORE (Tutup):
+  ├─ Close semua terminal
+  └─ Close browser
+
+═══════════════════════════════════════════════════════════════════════════
+  💡 TIPS PENTING
+═══════════════════════════════════════════════════════════════════════════
+
+  1. JANGAN close terminal saat sistem running!
+  2. Backend HARUS running dulu sebelum Player
+  3. Upload gambar → Publish → Refresh Player (F5)
+  4. Panggil antrian → Otomatis muncul di Player (real-time)
+  5. Jika error, lihat pesan di terminal
+
+═══════════════════════════════════════════════════════════════════════════
+  🔧 PERINTAH BERGUNA
+═══════════════════════════════════════════════════════════════════════════
+
+  Check port yang dipakai:
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ netstat -an | findstr "3000 3001 3002"                             │
+  └────────────────────────────────────────────────────────────────────┘
+
+  Kill process di port (ganti <PID>):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ taskkill /PID <PID> /F                                             │
+  └────────────────────────────────────────────────────────────────────┘
+
+  Reset database:
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ cd backend                                                         │
+  │ npx prisma migrate reset                                           │
+  │ npm run prisma:seed                                                │
+  └────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+  📖 DOKUMENTASI LENGKAP
+═══════════════════════════════════════════════════════════════════════════
+
+  • CARA_MENJALANKAN.md        - Panduan lengkap (BACA INI!)
+  • 00-BACA-INI-DULU.txt        - Overview sistem
+  • README.md                   - Dokumentasi utama
+  • QUICK_START.md              - Tutorial detail
+  • INSTALLATION_CHECKLIST.md   - Troubleshooting lengkap
+
+═══════════════════════════════════════════════════════════════════════════
+  🎯 RINGKASAN SINGKAT
+═══════════════════════════════════════════════════════════════════════════
+
+  Untuk menjalankan sistem:
+  
+  1. start-all.bat           (termudah)
+     ATAU
+  2. Buka 3 terminal manual (backend, admin, player)
+  
+  3. Tunggu 15 detik
+  4. Buka browser → localhost:3000/admin & localhost:3002
+  5. Selesai! 🎉
+
+═══════════════════════════════════════════════════════════════════════════
+
+  Created: 2024 | Version: 1.0.0 | Status: ✅ READY
+  
+═══════════════════════════════════════════════════════════════════════════
