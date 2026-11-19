@@ -1,11 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import SignagePlayer from './components/SignagePlayer';
 import { SignageConfig } from './types';
 
 // Read from environment variables or use defaults
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-const CLIENT_ID = import.meta.env.VITE_CLIENT_ID || 'PRAMITHA';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = rawApiUrl.trim().replace(/\/+$/, '');
+const CLIENT_ID = (import.meta.env.VITE_CLIENT_ID || 'PRAMITHA').trim();
 
 function App() {
   const [config, setConfig] = useState<SignageConfig | null>(null);
@@ -15,15 +16,20 @@ function App() {
   useEffect(() => {
     // Load initial config from API
     fetch(`${API_URL}/api/signage/${CLIENT_ID}`)
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`HTTP ${res.status}: ${text.slice(0, 80)}`);
+        }
+        return res.json();
+      })
       .then((result) => {
-        setConfig(result.data);
-        // Cache to localStorage
-        localStorage.setItem('signage_config', JSON.stringify(result.data));
+        const nextConfig = result?.data ?? result;
+        setConfig(nextConfig);
+        localStorage.setItem('signage_config', JSON.stringify(nextConfig));
       })
       .catch((err) => {
         console.error('Failed to load config:', err);
-        // Load from cache if available
         const cached = localStorage.getItem('signage_config');
         if (cached) {
           setConfig(JSON.parse(cached));
@@ -35,8 +41,14 @@ function App() {
       transports: ['websocket', 'polling'],
     });
 
+    setSocket(socketInstance);
+
     socketInstance.on('connect', () => {
       console.log('✅ WebSocket connected');
+    });
+
+    socketInstance.on('connect_error', (err) => {
+      console.error('❌ WebSocket connect_error:', err.message);
     });
 
     socketInstance.on('disconnect', () => {
@@ -46,9 +58,15 @@ function App() {
     // Listen for refresh events
     socketInstance.on(`refresh:${CLIENT_ID}`, (data) => {
       console.log('📡 Received refresh event', data);
-      setConfig(data);
-      localStorage.setItem('signage_config', JSON.stringify(data));
+      const nextConfig = data?.data ?? data;
+      setConfig(nextConfig);
+      localStorage.setItem('signage_config', JSON.stringify(nextConfig));
     });
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, []);
 
     // Listen for queue call events
     socketInstance.on(`queue:${CLIENT_ID}`, (data) => {
