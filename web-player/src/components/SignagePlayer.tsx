@@ -34,6 +34,21 @@ function SignagePlayer({ config, lastQueueCall, apiUrl }: Props) {
   const [highlightedSlot, setHighlightedSlot] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Merge custom layout dengan default layout
+  const LAYOUT = {
+    BackGround: config.content.layoutConfig?.BackGround || { x: 0, y: 0, w: 1920, h: 1080 },
+    Antrian1: config.content.layoutConfig?.Antrian1 || { x: 5, y: 9, w: 597, h: 190 },
+    Antrian2: config.content.layoutConfig?.Antrian2 || { x: 5, y: 203, w: 597, h: 190 },
+    Antrian3: config.content.layoutConfig?.Antrian3 || { x: 5, y: 397, w: 597, h: 190 },
+    Antrian4: config.content.layoutConfig?.Antrian4 || { x: 5, y: 590, w: 597, h: 190 },
+    Antrian5: config.content.layoutConfig?.Antrian5 || { x: 5, y: 784, w: 597, h: 190 },
+    Video: config.content.layoutConfig?.Video || { x: 628, y: 155, w: 1274, h: 622 },
+    Slide: config.content.layoutConfig?.Slide || { x: 625, y: 790, w: 640, h: 188 },
+    Tabel: config.content.layoutConfig?.Tabel || { x: 1272, y: 790, w: 639, h: 188 },
+    RText: config.content.layoutConfig?.RText || { x: 0, y: 1011, w: 1551, h: 67 },
+    DateTime: config.content.layoutConfig?.DateTime || { x: 1562, y: 994, w: 347, h: 79 },
+  };
+
   // Auto-scale to fit screen
   useEffect(() => {
     const updateScale = () => {
@@ -117,11 +132,19 @@ function SignagePlayer({ config, lastQueueCall, apiUrl }: Props) {
           );
         })}
 
-        {/* Video Player */}
-        <VideoPlayer
-          videos={config.content.videoUrls.map(url => `${apiUrl}${url}`)}
-          position={LAYOUT.Video}
-        />
+        {/* Video/Slideshow Area */}
+        {config.content.videoMode === 'slideshow' ? (
+          <SlideShow
+            slides={config.content.videoUrls.map(url => `${apiUrl}${url}`)}
+            position={LAYOUT.Video}
+            duration={(config.content.slideDuration || 5) * 1000}
+          />
+        ) : (
+          <VideoPlayer
+            videos={config.content.videoUrls.map(url => `${apiUrl}${url}`)}
+            position={LAYOUT.Video}
+          />
+        )}
 
         {/* Slide Show */}
         <SlideShow

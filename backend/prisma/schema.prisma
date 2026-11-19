@@ -46,6 +46,9 @@ model SignageContent {
   runningText   String   @default("")
   scheduleTable String   @default("[]") // JSON array berisi {poli, dokter, jam}
   backgroundUrl String   @default("")
+  layoutConfig  String   @default("{}") // JSON layout coordinates
+  videoMode     String   @default("video") // "video" atau "slideshow"
+  slideDuration Int      @default(5) // durasi slideshow dalam detik
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

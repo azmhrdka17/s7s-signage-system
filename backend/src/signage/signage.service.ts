@@ -30,6 +30,9 @@ export class SignageService {
               runningText: 'Selamat Datang',
               scheduleTable: '[]',
               backgroundUrl: '',
+              layoutConfig: '{}',
+              videoMode: 'video',
+              slideDuration: 5,
             },
           },
           queueSlots: {
@@ -64,6 +67,9 @@ export class SignageService {
         runningText: content ? content.runningText : '',
         scheduleTable: content ? JSON.parse(content.scheduleTable) : [],
         backgroundUrl: content ? content.backgroundUrl : '',
+        layoutConfig: content?.layoutConfig ? JSON.parse(content.layoutConfig) : {},
+        videoMode: content?.videoMode || 'video',
+        slideDuration: content?.slideDuration || 5,
       },
       queueSlots: client.queueSlots,
     };
@@ -75,6 +81,9 @@ export class SignageService {
     runningText?: string;
     scheduleTable?: any[];
     backgroundUrl?: string;
+    layoutConfig?: any;
+    videoMode?: string;
+    slideDuration?: number;
   }) {
     const client = await this.prisma.client.findUnique({
       where: { id: clientId },
@@ -91,6 +100,9 @@ export class SignageService {
     if (data.runningText !== undefined) updateData.runningText = data.runningText;
     if (data.scheduleTable !== undefined) updateData.scheduleTable = JSON.stringify(data.scheduleTable);
     if (data.backgroundUrl !== undefined) updateData.backgroundUrl = data.backgroundUrl;
+    if (data.layoutConfig !== undefined) updateData.layoutConfig = JSON.stringify(data.layoutConfig);
+    if (data.videoMode !== undefined) updateData.videoMode = data.videoMode;
+    if (data.slideDuration !== undefined) updateData.slideDuration = data.slideDuration;
 
     if (client.signageContent) {
       return this.prisma.signageContent.update({
@@ -106,6 +118,9 @@ export class SignageService {
           runningText: data.runningText || '',
           scheduleTable: JSON.stringify(data.scheduleTable || []),
           backgroundUrl: data.backgroundUrl || '',
+          layoutConfig: JSON.stringify(data.layoutConfig || {}),
+          videoMode: data.videoMode || 'video',
+          slideDuration: data.slideDuration || 5,
         },
       });
     }

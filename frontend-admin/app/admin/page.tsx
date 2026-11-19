@@ -126,6 +126,22 @@ export default function AdminPage() {
     <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-blue-900">Admin CMS - Kelola Konten Signage</h1>
 
+      {/* Navigation */}
+      <div className="mb-6 flex gap-3 flex-wrap">
+        <a
+          href="/layout-editor"
+          className="px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition"
+        >
+          🎨 Layout Editor
+        </a>
+        <a
+          href="/operator"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          👨‍💼 Operator Panel
+        </a>
+      </div>
+
       {/* Background */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 className="text-xl font-bold mb-4">🖼️ Background</h2>

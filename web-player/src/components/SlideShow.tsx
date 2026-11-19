@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 interface Props {
   slides: string[];
   position: { x: number; y: number; w: number; h: number };
+  duration?: number; // Durasi dalam milliseconds
 }
 
-function SlideShow({ slides, position }: Props) {
+function SlideShow({ slides, position, duration = 5000 }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -13,10 +14,10 @@ function SlideShow({ slides, position }: Props) {
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 5000); // Change slide every 5 seconds
+    }, duration);
 
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, duration]);
 
   if (slides.length === 0) {
     return (
