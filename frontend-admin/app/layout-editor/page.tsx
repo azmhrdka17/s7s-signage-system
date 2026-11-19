@@ -2,15 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = (
-  process.env.NEXT_PUBLIC_API_URL || 'https://s7s-signage-system-production.up.railway.app'
-).replace(/\/+$/, '');
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const CLIENT_ID = 'PRAMITHA';
 
-type BoxRect = { x: number; y: number; w: number; h: number };
-type BoxKey = keyof BoxRect;
-
-const DEFAULT_LAYOUT: Record<string, BoxRect> = {
+// Default layout
+const DEFAULT_LAYOUT = {
   BackGround: { x: 0, y: 0, w: 1920, h: 1080 },
   Antrian1: { x: 5, y: 9, w: 597, h: 190 },
   Antrian2: { x: 5, y: 203, w: 597, h: 190 },
@@ -24,14 +20,11 @@ const DEFAULT_LAYOUT: Record<string, BoxRect> = {
   DateTime: { x: 1562, y: 994, w: 347, h: 79 },
 };
 
-type LayoutMap = typeof DEFAULT_LAYOUT;
-type LayoutKey = keyof LayoutMap;
-
 export default function LayoutEditor() {
-  const [layout, setLayout] = useState<LayoutMap>(DEFAULT_LAYOUT);
+  const [layout, setLayout] = useState(DEFAULT_LAYOUT);
   const [videoMode, setVideoMode] = useState<'video' | 'slideshow'>('video');
   const [slideDuration, setSlideDuration] = useState(5);
-  const [selectedComponent, setSelectedComponent] = useState<LayoutKey | null>(null);
+  const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,11 +34,11 @@ export default function LayoutEditor() {
       .then((res) => res.json())
       .then((result) => {
         const data = result.data;
-        if (data?.content?.layoutConfig && Object.keys(data.content.layoutConfig).length > 0) {
+        if (data.content.layoutConfig && Object.keys(data.content.layoutConfig).length > 0) {
           setLayout({ ...DEFAULT_LAYOUT, ...data.content.layoutConfig });
         }
-        setVideoMode(data?.content?.videoMode || 'video');
-        setSlideDuration(data?.content?.slideDuration || 5);
+        setVideoMode(data.content.videoMode || 'video');
+        setSlideDuration(data.content.slideDuration || 5);
         setLoading(false);
       })
       .catch((err) => {
@@ -54,14 +47,14 @@ export default function LayoutEditor() {
       });
   }, []);
 
-  const updateComponent = (component: LayoutKey, key: BoxKey, value: number) => {
-    setLayout((prev) => ({
-      ...prev,
+  const updateComponent = (component: string, key: string, value: number) => {
+    setLayout({
+      ...layout,
       [component]: {
-        ...prev[component],
+        ...layout[component as keyof typeof layout],
         [key]: value,
       },
-    }));
+    });
   };
 
   const saveLayout = async () => {
@@ -102,13 +95,13 @@ export default function LayoutEditor() {
     );
   }
 
-  const components = Object.keys(layout) as LayoutKey[];
-  const activeBox: BoxRect | null = selectedComponent ? layout[selectedComponent] : null;
+  const components = Object.keys(layout) as Array<keyof typeof layout>;
 
   return (
     <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
       <h1>🎨 Layout Editor - {CLIENT_ID}</h1>
-
+      
+      {/* Video Mode Settings */}
       <div style={{ marginBottom: 20, padding: 20, background: '#f0f0f0', borderRadius: 8 }}>
         <h3>Video Area Mode</h3>
         <label style={{ marginRight: 20 }}>
@@ -139,7 +132,7 @@ export default function LayoutEditor() {
                 min="1"
                 max="60"
                 value={slideDuration}
-                onChange={(e) => setSlideDuration(parseInt(e.target.value, 10) || 5)}
+                onChange={(e) => setSlideDuration(parseInt(e.target.value) || 5)}
                 style={{ width: 60, padding: 5 }}
               />
               {' '} detik
@@ -148,10 +141,10 @@ export default function LayoutEditor() {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 20 }}>
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
         {/* Left: Component List */}
-        <div style={{ flex: 1, background: '#f9f9f9', padding: 20, borderRadius: 8 }}>
-          <h3>Pilih Komponen:</h3>
+        <div style={{ flex: '0 0 200px', background: '#f9f9f9', padding: 20, borderRadius: 8 }}>
+          <h3 style={{ marginTop: 0 }}>Komponen:</h3>
           {components.map((comp) => (
             <button
               key={comp}
@@ -175,63 +168,160 @@ export default function LayoutEditor() {
           ))}
         </div>
 
+        {/* Center: Visual Preview */}
+        <div style={{ flex: '1 1 600px', minWidth: 400, background: '#1a1a1a', padding: 20, borderRadius: 8 }}>
+          <h3 style={{ color: 'white', marginTop: 0, marginBottom: 10 }}>📺 Live Preview (1920×1080)</h3>
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            paddingTop: '56.25%', // 16:9 aspect ratio
+            background: '#000',
+            border: '2px solid #444',
+            borderRadius: 8,
+            overflow: 'hidden',
+          }}>
+            {/* Preview Container dengan scale */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+            }}>
+              <div style={{
+                position: 'relative',
+                width: 1920,
+                height: 1080,
+                transform: 'scale(0.4)',
+                transformOrigin: 'top left',
+              }}>
+                {/* Render semua komponen */}
+                {components.map((comp) => {
+                  const pos = layout[comp];
+                  const isSelected = selectedComponent === comp;
+                  
+                  // Color coding
+                  let bgColor = 'rgba(100, 100, 255, 0.3)'; // Default: blue
+                  if (comp.startsWith('Antrian')) bgColor = 'rgba(255, 165, 0, 0.4)'; // Orange for queue
+                  if (comp === 'Video') bgColor = 'rgba(255, 50, 50, 0.4)'; // Red for video
+                  if (comp === 'Slide') bgColor = 'rgba(100, 255, 100, 0.4)'; // Green for slide
+                  if (comp === 'BackGround') bgColor = 'rgba(150, 150, 150, 0.2)'; // Gray for bg
+                  
+                  return (
+                    <div
+                      key={comp}
+                      onClick={() => setSelectedComponent(comp)}
+                      title={`${comp}: ${pos.x},${pos.y} - ${pos.w}×${pos.h}`}
+                      style={{
+                        position: 'absolute',
+                        left: pos.x,
+                        top: pos.y,
+                        width: pos.w,
+                        height: pos.h,
+                        background: isSelected ? 'rgba(76, 175, 80, 0.6)' : bgColor,
+                        border: isSelected ? '6px solid #4CAF50' : '3px solid rgba(255, 255, 255, 0.4)',
+                        borderRadius: 4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isSelected ? '0 0 30px rgba(76, 175, 80, 0.8)' : '0 0 10px rgba(0,0,0,0.5)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isSelected) e.currentTarget.style.opacity = '0.8';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) e.currentTarget.style.opacity = '1';
+                      }}
+                    >
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                          color: 'white',
+                          fontSize: Math.max(20, pos.w / 15),
+                          fontWeight: 'bold',
+                          textShadow: '2px 2px 6px black',
+                          userSelect: 'none',
+                          marginBottom: 5,
+                        }}>
+                          {comp}
+                        </div>
+                        <div style={{
+                          color: '#ddd',
+                          fontSize: Math.max(12, pos.w / 30),
+                          textShadow: '1px 1px 3px black',
+                          userSelect: 'none',
+                        }}>
+                          {pos.w}×{pos.h}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <p style={{ color: '#999', fontSize: 12, marginTop: 10, textAlign: 'center' }}>
+            💡 Klik komponen di preview untuk edit
+          </p>
+        </div>
+
         {/* Right: Position Editor */}
-        <div style={{ flex: 2, background: '#fff', padding: 20, borderRadius: 8, border: '1px solid #ddd' }}>
-          {selectedComponent && activeBox ? (
+        <div style={{ flex: '0 0 300px', background: '#fff', padding: 20, borderRadius: 8, border: '1px solid #ddd' }}>
+          {selectedComponent ? (
             <>
-              <h3>Edit Posisi: {selectedComponent}</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-                {(['x', 'y', 'w', 'h'] as BoxKey[]).map((key) => (
+              <h3 style={{ marginTop: 0 }}>Edit: {selectedComponent}</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15 }}>
+                {(['x', 'y', 'w', 'h'] as const).map((key) => (
                   <div key={key}>
                     <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>
-                      {key === 'x' ? 'X (Left)' : key === 'y' ? 'Y (Top)' : key === 'w' ? 'Width' : 'Height'}:
+                      {key === 'x' ? '↔️ X (Left)' : key === 'y' ? '↕️ Y (Top)' : key === 'w' ? '⬌ Width' : '⬍ Height'}: <span style={{ color: '#666' }}>{layout[selectedComponent][key]}px</span>
                     </label>
-                    <input
-                      type="number"
-                      value={activeBox[key]}
-                      onChange={(e) =>
-                        updateComponent(selectedComponent, key, parseInt(e.target.value, 10) || 0)
-                      }
-                      style={{
-                        width: '100%',
-                        padding: 8,
-                        border: '1px solid #ccc',
-                        borderRadius: 4,
-                        fontSize: 16,
-                      }}
-                    />
                     <input
                       type="range"
                       min="0"
                       max={key === 'x' || key === 'w' ? 1920 : 1080}
-                      value={activeBox[key]}
-                      onChange={(e) =>
-                        updateComponent(selectedComponent, key, parseInt(e.target.value, 10))
-                      }
-                      style={{ width: '100%', marginTop: 5 }}
+                      value={layout[selectedComponent][key]}
+                      onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value))}
+                      style={{ width: '100%' }}
+                    />
+                    <input
+                      type="number"
+                      value={layout[selectedComponent][key]}
+                      onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value) || 0)}
+                      style={{
+                        width: '100%',
+                        padding: 6,
+                        border: '1px solid #ccc',
+                        borderRadius: 4,
+                        marginTop: 5,
+                      }}
                     />
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: 20, padding: 15, background: '#e3f2fd', borderRadius: 5 }}>
-                <strong>Preview:</strong>
-                <div style={{ marginTop: 10, fontFamily: 'monospace', fontSize: 14 }}>
-                  Position: ({activeBox.x}, {activeBox.y})<br />
-                  Size: {activeBox.w} × {activeBox.h}
+                <strong>📍 Koordinat:</strong>
+                <div style={{ marginTop: 10, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6 }}>
+                  X: {layout[selectedComponent].x}px<br />
+                  Y: {layout[selectedComponent].y}px<br />
+                  Width: {layout[selectedComponent].w}px<br />
+                  Height: {layout[selectedComponent].h}px
                 </div>
               </div>
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>
-              <h3>← Pilih komponen untuk edit</h3>
+              <h3>← Pilih Komponen</h3>
+              <p style={{ fontSize: 14 }}>Klik komponen di preview atau list</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div style={{ marginTop: 30, display: 'flex', gap: 10 }}>
+      <div style={{ marginTop: 30, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
           onClick={saveLayout}
           disabled={saving}
@@ -284,13 +374,13 @@ export default function LayoutEditor() {
       {/* Info */}
       <div style={{ marginTop: 30, padding: 20, background: '#fff3cd', borderRadius: 8 }}>
         <h4>ℹ️ Catatan:</h4>
-        <ul>
-          <li>Koordinat base: 1920×1080 (Full HD)</li>
-          <li>X, Y = posisi dari kiri-atas</li>
-          <li>W, H = lebar dan tinggi komponen</li>
-          <li>Player akan auto-scale ke resolusi monitor</li>
-          <li><strong>Video Mode:</strong> Pilih "Video" untuk .mp4, atau "Slideshow" untuk gambar</li>
-          <li>Perubahan akan langsung terlihat di player setelah save</li>
+        <ul style={{ lineHeight: 1.8 }}>
+          <li>📺 <strong>Preview real-time</strong> - Lihat posisi langsung</li>
+          <li>🎯 <strong>Klik komponen</strong> di preview untuk edit</li>
+          <li>🎨 <strong>Warna komponen:</strong> Orange = Antrian, Red = Video, Green = Slide</li>
+          <li>📏 Base koordinat: <strong>1920×1080</strong> (Full HD)</li>
+          <li>🔧 Player akan <strong>auto-scale</strong> ke resolusi monitor</li>
+          <li>⚡ Perubahan langsung terlihat di player setelah save</li>
         </ul>
       </div>
     </div>
