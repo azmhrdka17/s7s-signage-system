@@ -159,28 +159,41 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* Video */}
+      {/* Video / Slideshow */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h2 className="text-xl font-bold mb-4">🎥 Video</h2>
+        <h2 className="text-xl font-bold mb-4">🎥 Video / Slideshow Area</h2>
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded mb-3">
+          <p className="text-sm text-blue-800">
+            💡 <strong>Tips:</strong> Upload <strong>video (.mp4)</strong> untuk mode Video, atau <strong>gambar (.jpg, .png)</strong> untuk mode Slideshow. 
+            Atur mode di <a href="/layout-editor" className="text-blue-600 underline font-bold">Layout Editor</a>.
+          </p>
+        </div>
         <input
           type="file"
-          accept="video/*"
+          accept="video/*,image/*"
           onChange={(e) => handleFileUpload(e, 'video')}
           disabled={uploading}
           className="mb-4"
         />
         <div className="grid grid-cols-4 gap-4">
-          {videoUrls.map((url, index) => (
-            <div key={index} className="relative">
-              <video src={`${API_URL}${url}`} className="w-full h-24 object-cover rounded" />
-              <button
-                onClick={() => deleteMedia('video', index)}
-                className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs rounded"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+          {videoUrls.map((url, index) => {
+            const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+            return (
+              <div key={index} className="relative">
+                {isImage ? (
+                  <img src={`${API_URL}${url}`} alt={`Media ${index}`} className="w-full h-24 object-cover rounded" />
+                ) : (
+                  <video src={`${API_URL}${url}`} className="w-full h-24 object-cover rounded" />
+                )}
+                <button
+                  onClick={() => deleteMedia('video', index)}
+                  className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs rounded"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
