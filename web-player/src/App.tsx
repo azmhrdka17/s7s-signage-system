@@ -63,20 +63,15 @@ function App() {
       localStorage.setItem('signage_config', JSON.stringify(nextConfig));
     });
 
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
-
     // Listen for queue call events
     socketInstance.on(`queue:${CLIENT_ID}`, (data) => {
       console.log('📡 Received queue call', data);
       setLastQueueCall(data);
-      
+
       // Update config queueSlots immediately
       setConfig((prevConfig) => {
         if (!prevConfig) return prevConfig;
-        
+
         const updatedSlots = prevConfig.queueSlots.map((slot) => {
           if (slot.slotNumber === data.slotNumber) {
             return {
@@ -89,7 +84,7 @@ function App() {
         });
 
         // If slot doesn't exist, add it
-        const slotExists = updatedSlots.some(s => s.slotNumber === data.slotNumber);
+        const slotExists = updatedSlots.some((s) => s.slotNumber === data.slotNumber);
         if (!slotExists) {
           updatedSlots.push({
             id: Date.now(), // temporary ID
@@ -110,12 +105,10 @@ function App() {
 
         // Update cache
         localStorage.setItem('signage_config', JSON.stringify(newConfig));
-        
+
         return newConfig;
       });
     });
-
-    setSocket(socketInstance);
 
     return () => {
       socketInstance.disconnect();
@@ -124,25 +117,28 @@ function App() {
 
   if (!config) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#000',
-        color: '#fff',
-        fontSize: '24px'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          background: '#000',
+          color: '#fff',
+          fontSize: '24px',
+        }}
+      >
         Loading...
       </div>
     );
   }
 
   return (
-    <SignagePlayer 
-      config={config} 
-      lastQueueCall={lastQueueCall} 
+    <SignagePlayer
+      config={config}
+      lastQueueCall={lastQueueCall}
       apiUrl={API_URL}
+      socket={socket}
     />
   );
 }
