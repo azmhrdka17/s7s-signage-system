@@ -5,8 +5,11 @@ import { useState, useEffect } from 'react';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const CLIENT_ID = 'PRAMITHA';
 
+type BoxRect = { x: number; y: number; w: number; h: number };
+type BoxKey = keyof BoxRect;
+
 // Default layout
-const DEFAULT_LAYOUT = {
+const DEFAULT_LAYOUT: Record<string, BoxRect> = {
   BackGround: { x: 0, y: 0, w: 1920, h: 1080 },
   Antrian1: { x: 5, y: 9, w: 597, h: 190 },
   Antrian2: { x: 5, y: 203, w: 597, h: 190 },
@@ -20,11 +23,14 @@ const DEFAULT_LAYOUT = {
   DateTime: { x: 1562, y: 994, w: 347, h: 79 },
 };
 
+type LayoutMap = typeof DEFAULT_LAYOUT;
+type LayoutKey = keyof LayoutMap;
+
 export default function LayoutEditor() {
-  const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+  const [layout, setLayout] = useState<LayoutMap>(DEFAULT_LAYOUT);
   const [videoMode, setVideoMode] = useState<'video' | 'slideshow'>('video');
   const [slideDuration, setSlideDuration] = useState(5);
-  const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+  const [selectedComponent, setSelectedComponent] = useState<LayoutKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -47,11 +53,11 @@ export default function LayoutEditor() {
       });
   }, []);
 
-  const updateComponent = (component: string, key: string, value: number) => {
+  const updateComponent = (component: LayoutKey, key: BoxKey, value: number) => {
     setLayout({
       ...layout,
       [component]: {
-        ...layout[component as keyof typeof layout],
+        ...layout[component],
         [key]: value,
       },
     });
@@ -95,7 +101,8 @@ export default function LayoutEditor() {
     );
   }
 
-  const components = Object.keys(layout) as Array<keyof typeof layout>;
+  const components = Object.keys(layout) as LayoutKey[];
+  const activeComponent = selectedComponent ? layout[selectedComponent] : null;
 
   return (
     <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
@@ -268,26 +275,26 @@ export default function LayoutEditor() {
 
         {/* Right: Position Editor */}
         <div style={{ flex: '0 0 300px', background: '#fff', padding: 20, borderRadius: 8, border: '1px solid #ddd' }}>
-          {selectedComponent ? (
+          {selectedComponent && activeComponent ? (
             <>
               <h3 style={{ marginTop: 0 }}>Edit: {selectedComponent}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15 }}>
-                {(['x', 'y', 'w', 'h'] as const).map((key) => (
+                {(['x', 'y', 'w', 'h'] as BoxKey[]).map((key) => (
                   <div key={key}>
                     <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>
-                      {key === 'x' ? '↔️ X (Left)' : key === 'y' ? '↕️ Y (Top)' : key === 'w' ? '⬌ Width' : '⬍ Height'}: <span style={{ color: '#666' }}>{layout[selectedComponent][key]}px</span>
+                      {key === 'x' ? '↔️ X (Left)' : key === 'y' ? '↕️ Y (Top)' : key === 'w' ? '⬌ Width' : '⬍ Height'}: <span style={{ color: '#666' }}>{activeComponent[key]}px</span>
                     </label>
                     <input
                       type="range"
                       min="0"
                       max={key === 'x' || key === 'w' ? 1920 : 1080}
-                      value={layout[selectedComponent][key]}
+                      value={activeComponent[key]}
                       onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value))}
                       style={{ width: '100%' }}
                     />
                     <input
                       type="number"
-                      value={layout[selectedComponent][key]}
+                      value={activeComponent[key]}
                       onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value) || 0)}
                       style={{
                         width: '100%',
@@ -304,10 +311,10 @@ export default function LayoutEditor() {
               <div style={{ marginTop: 20, padding: 15, background: '#e3f2fd', borderRadius: 5 }}>
                 <strong>📍 Koordinat:</strong>
                 <div style={{ marginTop: 10, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6 }}>
-                  X: {layout[selectedComponent].x}px<br />
-                  Y: {layout[selectedComponent].y}px<br />
-                  Width: {layout[selectedComponent].w}px<br />
-                  Height: {layout[selectedComponent].h}px
+                  X: {activeComponent.x}px<br />
+                  Y: {activeComponent.y}px<br />
+                  Width: {activeComponent.w}px<br />
+                  Height: {activeComponent.h}px
                 </div>
               </div>
             </>
