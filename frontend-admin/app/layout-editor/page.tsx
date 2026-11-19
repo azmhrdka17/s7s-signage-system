@@ -2,11 +2,15 @@
 
 import { useState, useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL || 'https://s7s-signage-system-production.up.railway.app'
+).replace(/\/+$/, '');
 const CLIENT_ID = 'PRAMITHA';
 
-// Default layout
-const DEFAULT_LAYOUT = {
+type BoxRect = { x: number; y: number; w: number; h: number };
+type BoxKey = keyof BoxRect;
+
+const DEFAULT_LAYOUT: Record<string, BoxRect> = {
   BackGround: { x: 0, y: 0, w: 1920, h: 1080 },
   Antrian1: { x: 5, y: 9, w: 597, h: 190 },
   Antrian2: { x: 5, y: 203, w: 597, h: 190 },
@@ -20,11 +24,14 @@ const DEFAULT_LAYOUT = {
   DateTime: { x: 1562, y: 994, w: 347, h: 79 },
 };
 
+type LayoutMap = typeof DEFAULT_LAYOUT;
+type LayoutKey = keyof LayoutMap;
+
 export default function LayoutEditor() {
-  const [layout, setLayout] = useState(DEFAULT_LAYOUT);
+  const [layout, setLayout] = useState<LayoutMap>(DEFAULT_LAYOUT);
   const [videoMode, setVideoMode] = useState<'video' | 'slideshow'>('video');
   const [slideDuration, setSlideDuration] = useState(5);
-  const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+  const [selectedComponent, setSelectedComponent] = useState<LayoutKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -34,11 +41,11 @@ export default function LayoutEditor() {
       .then((res) => res.json())
       .then((result) => {
         const data = result.data;
-        if (data.content.layoutConfig && Object.keys(data.content.layoutConfig).length > 0) {
+        if (data?.content?.layoutConfig && Object.keys(data.content.layoutConfig).length > 0) {
           setLayout({ ...DEFAULT_LAYOUT, ...data.content.layoutConfig });
         }
-        setVideoMode(data.content.videoMode || 'video');
-        setSlideDuration(data.content.slideDuration || 5);
+        setVideoMode(data?.content?.videoMode || 'video');
+        setSlideDuration(data?.content?.slideDuration || 5);
         setLoading(false);
       })
       .catch((err) => {
@@ -47,14 +54,14 @@ export default function LayoutEditor() {
       });
   }, []);
 
-  const updateComponent = (component: string, key: string, value: number) => {
-    setLayout({
-      ...layout,
+  const updateComponent = (component: LayoutKey, key: BoxKey, value: number) => {
+    setLayout((prev) => ({
+      ...prev,
       [component]: {
-        ...layout[component as keyof typeof layout],
+        ...prev[component],
         [key]: value,
       },
-    });
+    }));
   };
 
   const saveLayout = async () => {
@@ -95,12 +102,13 @@ export default function LayoutEditor() {
     );
   }
 
-  const components = Object.keys(layout) as Array<keyof typeof layout>;
+  const components = Object.keys(layout) as LayoutKey[];
+  const activeBox: BoxRect | null = selectedComponent ? layout[selectedComponent] : null;
 
   return (
     <div style={{ padding: 20, fontFamily: 'sans-serif' }}>
       <h1>🎨 Layout Editor - {CLIENT_ID}</h1>
-      
+
       <div style={{ marginBottom: 20, padding: 20, background: '#f0f0f0', borderRadius: 8 }}>
         <h3>Video Area Mode</h3>
         <label style={{ marginRight: 20 }}>
@@ -131,7 +139,7 @@ export default function LayoutEditor() {
                 min="1"
                 max="60"
                 value={slideDuration}
-                onChange={(e) => setSlideDuration(parseInt(e.target.value) || 5)}
+                onChange={(e) => setSlideDuration(parseInt(e.target.value, 10) || 5)}
                 style={{ width: 60, padding: 5 }}
               />
               {' '} detik
@@ -169,19 +177,21 @@ export default function LayoutEditor() {
 
         {/* Right: Position Editor */}
         <div style={{ flex: 2, background: '#fff', padding: 20, borderRadius: 8, border: '1px solid #ddd' }}>
-          {selectedComponent ? (
+          {selectedComponent && activeBox ? (
             <>
               <h3>Edit Posisi: {selectedComponent}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
-                {(['x', 'y', 'w', 'h'] as const).map((key) => (
+                {(['x', 'y', 'w', 'h'] as BoxKey[]).map((key) => (
                   <div key={key}>
                     <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>
                       {key === 'x' ? 'X (Left)' : key === 'y' ? 'Y (Top)' : key === 'w' ? 'Width' : 'Height'}:
                     </label>
                     <input
                       type="number"
-                      value={layout[selectedComponent][key]}
-                      onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value) || 0)}
+                      value={activeBox[key]}
+                      onChange={(e) =>
+                        updateComponent(selectedComponent, key, parseInt(e.target.value, 10) || 0)
+                      }
                       style={{
                         width: '100%',
                         padding: 8,
@@ -194,8 +204,10 @@ export default function LayoutEditor() {
                       type="range"
                       min="0"
                       max={key === 'x' || key === 'w' ? 1920 : 1080}
-                      value={layout[selectedComponent][key]}
-                      onChange={(e) => updateComponent(selectedComponent, key, parseInt(e.target.value))}
+                      value={activeBox[key]}
+                      onChange={(e) =>
+                        updateComponent(selectedComponent, key, parseInt(e.target.value, 10))
+                      }
                       style={{ width: '100%', marginTop: 5 }}
                     />
                   </div>
@@ -205,8 +217,8 @@ export default function LayoutEditor() {
               <div style={{ marginTop: 20, padding: 15, background: '#e3f2fd', borderRadius: 5 }}>
                 <strong>Preview:</strong>
                 <div style={{ marginTop: 10, fontFamily: 'monospace', fontSize: 14 }}>
-                  Position: ({layout[selectedComponent].x}, {layout[selectedComponent].y})<br />
-                  Size: {layout[selectedComponent].w} × {layout[selectedComponent].h}
+                  Position: ({activeBox.x}, {activeBox.y})<br />
+                  Size: {activeBox.w} × {activeBox.h}
                 </div>
               </div>
             </>
